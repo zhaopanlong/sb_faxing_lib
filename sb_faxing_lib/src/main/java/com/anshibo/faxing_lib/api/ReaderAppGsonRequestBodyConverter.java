@@ -1,0 +1,56 @@
+package com.anshibo.faxing_lib.api;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.text.TextUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
+
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Map;
+
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import retrofit2.Converter;
+
+/**
+ * @author 赵盼龙
+ * @createtime：2018/4/2 15:54
+ */
+public class ReaderAppGsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
+    private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
+
+    private final Gson gson;
+    private final TypeAdapter<T> adapter;
+
+
+    ReaderAppGsonRequestBodyConverter(Gson gson, TypeAdapter<T> adapter) {
+        this.gson = gson;
+        this.adapter = adapter;
+    }
+
+    @Override
+    public RequestBody convert(T value) throws IOException {
+        String bodyString = null;
+        if (value instanceof Map) {
+            JSONObject jsonObject = new JSONObject((Map) value);
+            bodyString = jsonObject.toString();
+        } else if (value instanceof String) {
+            bodyString = value.toString();
+        } else {
+            try {
+                bodyString = ReaderGsonHelper.toJson(value);
+            } catch (Exception e) {
+                throw new ClassCastException();
+            }
+
+        }
+
+        return RequestBody.create(MEDIA_TYPE, bodyString);
+    }
+}
