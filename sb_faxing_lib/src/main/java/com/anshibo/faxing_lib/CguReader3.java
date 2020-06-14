@@ -2,20 +2,101 @@ package com.anshibo.faxing_lib;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.text.TextUtils;
-import android.util.Base64;
 
-import com.cgutech.bluetoothstatusapi.exception.ErrorStateException;
 import com.cgutech.newbluetoothapi.BluetoothObuCallback;
-import com.cgutech.newbluetoothapi.BluetoothObuHandler;
-import com.cgutech.newbluetoothapi.ReceiveResult;
 
 /**
  * @author zhaopanlong
  * @createtime：2020/4/16 上午9:40
+ * 由于 新老sdk不兼容 所以先把代码注释掉
  */
 public class CguReader3 implements IReader, BluetoothObuCallback {
-    private static final String TAG = "成谷设备";
+
+
+    public static IReader getInstance(Context mContext) {
+        return null;
+    }
+
+    @Override
+    public ReaderResult connect(ReaderDevice device) {
+        return null;
+    }
+
+    @Override
+    public void disConnect() {
+
+    }
+
+    @Override
+    public ReaderResult getSE() {
+        return null;
+    }
+
+    @Override
+    public ReaderResult mingWen(String cmd) {
+        return null;
+    }
+
+    @Override
+    public ReaderResult esamMingWen(String cmd) {
+        return null;
+    }
+
+    @Override
+    public ReaderResult miWen(String cmds, boolean noNew) {
+        return null;
+    }
+
+    @Override
+    public ReaderResult esamMiWen(String cmd) {
+        return null;
+    }
+
+    @Override
+    public void onConnect() {
+
+    }
+
+    @Override
+    public void onConnectTimeout() {
+
+    }
+
+    @Override
+    public void onConnectError(String s) {
+
+    }
+
+    @Override
+    public void onDisconnect() {
+
+    }
+
+    @Override
+    public void onReceiveObuCmd(String s, String s1) {
+
+    }
+
+    @Override
+    public void onScanSuccess(BluetoothDevice bluetoothDevice, int i) {
+
+    }
+
+    @Override
+    public void onScanTimeout() {
+
+    }
+
+    @Override
+    public void onSendTimeout(String s, String s1) {
+
+    }
+
+    @Override
+    public void onSendError(String s) {
+
+    }
+/*    private static final String TAG = "成谷设备";
     private static CguReader3 cguReader3;
     protected BluetoothObuHandler bluetoothObuHandler;
 
@@ -211,11 +292,11 @@ public class CguReader3 implements IReader, BluetoothObuCallback {
         return cmds2;
     }
 
-    /**
+    *//**
      * 获取按位异或的数据
      *
      * @param comds
-     */
+     *//*
     private String getComds(String comds) {
         String[] dateArr = new String[comds.length() / 2];
         try {
@@ -264,5 +345,5 @@ public class CguReader3 implements IReader, BluetoothObuCallback {
         }
 //        Log.e("code", result+"::16::进制数::"+Integer.toHexString(Integer.parseInt(result, 2)));
         return HexBytes.desToHex(Integer.parseInt(result, 2), 2);
-    }
+    }*/
 }
