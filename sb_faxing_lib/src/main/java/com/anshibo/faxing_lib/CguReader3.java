@@ -2,8 +2,12 @@ package com.anshibo.faxing_lib;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.text.TextUtils;
 
+import com.cgutech.bluetoothstatusapi.exception.ErrorStateException;
 import com.cgutech.newbluetoothapi.BluetoothObuCallback;
+import com.cgutech.newbluetoothapi.BluetoothObuHandler;
+import com.cgutech.newbluetoothapi.ReceiveResult;
 
 /**
  * @author zhaopanlong
@@ -11,35 +15,148 @@ import com.cgutech.newbluetoothapi.BluetoothObuCallback;
  * 由于 新老sdk不兼容 所以先把代码注释掉
  */
 public class CguReader3 implements IReader, BluetoothObuCallback {
-
+    private static CguReader3 instance;
+    private Context mContext;
+    private BluetoothObuHandler mBluetoothObuHandler;
 
     public static IReader getInstance(Context mContext) {
-        return null;
+        if (instance == null) {
+            instance = new CguReader3(mContext);
+        }
+        return instance;
+    }
+
+    private CguReader3(Context context) {
+        mContext = context;
+        mBluetoothObuHandler = BluetoothObuHandler.getInstance();
+        mBluetoothObuHandler.initializeObu(context, new BluetoothObuCallback() {
+            @Override
+            public void onConnect() {
+
+            }
+
+            @Override
+            public void onConnectTimeout() {
+
+            }
+
+            @Override
+            public void onConnectError(String s) {
+
+            }
+
+            @Override
+            public void onDisconnect() {
+
+            }
+
+            @Override
+            public void onReceiveObuCmd(String s, String s1) {
+
+            }
+
+            @Override
+            public void onScanSuccess(BluetoothDevice bluetoothDevice, int i) {
+
+            }
+
+            @Override
+            public void onScanTimeout() {
+
+            }
+
+            @Override
+            public void onSendTimeout(String s, String s1) {
+
+            }
+
+            @Override
+            public void onSendError(String s) {
+
+            }
+        });
     }
 
     @Override
     public ReaderResult connect(ReaderDevice device) {
-        return null;
+        ReaderResult readerResult = new ReaderResult();
+        try {
+            int i = mBluetoothObuHandler.connectToObu(device.getBluetoothDevice(), 10000);
+            if (i == 0) {
+                readerResult.setSuccess(true);
+                return readerResult;
+            }
+        } catch (ErrorStateException e) {
+            e.printStackTrace();
+        }
+        return readerResult;
     }
 
     @Override
     public void disConnect() {
-
+        try {
+            mBluetoothObuHandler.disconnectObu();
+        } catch (ErrorStateException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public ReaderResult getSE() {
-        return null;
+        ReaderResult readerResult = new ReaderResult();
+        //获取SE编号
+        try {
+            mBluetoothObuHandler.sendObuCmd("d1", "30");
+            ReceiveResult serStatus = mBluetoothObuHandler.sendObuCmd("a7", ReaderConst.GET_SE_NUM_CMD, 3, 10000);
+            if (!TextUtils.isEmpty(serStatus.getCommand()) && serStatus.getCommand().substring(0, serStatus.getCommand().length() - 2).endsWith("9000")) {//返回成功
+                readerResult.setSuccess(true);
+                readerResult.setResult(serStatus.getCommand().substring(8, serStatus.getCommand().length() - 6));
+                return readerResult;
+            }
+        } catch (ErrorStateException e) {
+            e.printStackTrace();
+        }
+        return readerResult;
     }
 
     @Override
     public ReaderResult mingWen(String cmd) {
-        return null;
+        ReaderResult readerResult = new ReaderResult();
+        try {
+            String len = HexBytes.desToHex(cmd.length() / 2, 2);
+            mBluetoothObuHandler.sendObuCmd("d1", "30");
+            ReceiveResult serStatus = mBluetoothObuHandler.sendObuCmd("a3", "01" + len + cmd, 3, 10000);
+            LogUtils.i("成谷明文结果：" + serStatus.getChannel() + "::::" + serStatus.getCommand());
+            if (!TextUtils.isEmpty(serStatus.getCommand()) && serStatus.getCommand().endsWith("9000")) {//返回成功
+                readerResult.setSuccess(true);
+                readerResult.setResult(serStatus.getCommand().substring(6, serStatus.getCommand().length() - 4));
+                return readerResult;
+            }
+        } catch (ErrorStateException e) {
+            e.printStackTrace();
+        }
+
+        return readerResult;
     }
 
     @Override
     public ReaderResult esamMingWen(String cmd) {
-        return null;
+        ReaderResult readerResult = new ReaderResult();
+        try {
+            mBluetoothObuHandler.sendObuCmd("d1", "30");
+            ReceiveResult serStatus = mBluetoothObuHandler.sendEsamCmd(cmd);
+            LogUtils.i("成谷esm：" + serStatus.getChannel() + "::::" + serStatus.getCommand());
+            if (!TextUtils.isEmpty(serStatus.getCommand()) && serStatus.getCommand().endsWith("9000")) {
+                readerResult.setSuccess(true);
+                readerResult.setResult(serStatus.getCommand().substring(6, serStatus.getCommand().length() - 4));
+                return readerResult;
+
+            }
+        } catch (ErrorStateException e) {
+            e.printStackTrace();
+        }
+
+        return readerResult;
     }
 
     @Override

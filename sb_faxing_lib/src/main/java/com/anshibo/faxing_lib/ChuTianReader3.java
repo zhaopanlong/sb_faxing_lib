@@ -3,9 +3,13 @@ package com.anshibo.faxing_lib;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.Base64;
+import android.util.Log;
 
 import com.bluetoothobu.obusdk.OBUManager;
 import com.bluetoothobu.obusdk.ServiceStatus;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author zhaopanlong
@@ -58,12 +62,58 @@ public class ChuTianReader3 implements IReader {
 
     @Override
     public ReaderResult mingWen(String cmd) {
-        return null;
+        ServiceStatus serStatus = obuMan.transCommand("0", cmd);
+        Log.i("读卡返回", "code " + serStatus.getServiceCode());
+        ReaderResult readerResult = new ReaderResult();
+        if (serStatus.getServiceCode() == 0) {
+            LogUtils.i("返回内容 :" + serStatus.getServiceInfo());
+            String serviceInfo = serStatus.getServiceInfo().replaceAll(" ", "").trim();
+            serviceInfo = replaceBlank(serviceInfo).trim();//去除空格和换行
+            int start = serviceInfo.indexOf("明文");
+            int end = serviceInfo.indexOf("签名内容");
+            String ming = serviceInfo;
+            String qianming = "";
+
+            if (start != -1 && end != -1) {
+                ming = serviceInfo.substring(start + 2, end);
+                qianming = serviceInfo.substring(end + 4);
+            }
+            if (ming.endsWith("9000")) {
+                readerResult.setSuccess(true);
+                readerResult.setResult(ming.substring(0, ming.length() - 4));
+                return readerResult;
+            }
+        }
+
+        return readerResult;
     }
 
     @Override
     public ReaderResult esamMingWen(String cmd) {
-        return null;
+        ServiceStatus serStatus = obuMan.transCommand("1", cmd);
+        Log.i("读卡返回", "code " + serStatus.getServiceCode());
+        ReaderResult readerResult = new ReaderResult();
+        if (serStatus.getServiceCode() == 0) {
+            LogUtils.i("返回内容 :" + serStatus.getServiceInfo());
+            String serviceInfo = serStatus.getServiceInfo().replaceAll(" ", "").trim();
+            serviceInfo = replaceBlank(serviceInfo).trim();//去除空格和换行
+            int start = serviceInfo.indexOf("明文");
+            int end = serviceInfo.indexOf("签名内容");
+            String ming = serviceInfo;
+            String qianming = "";
+
+            if (start != -1 && end != -1) {
+                ming = serviceInfo.substring(start + 2, end);
+                qianming = serviceInfo.substring(end + 4);
+            }
+            if (ming.endsWith("9000")) {
+                readerResult.setSuccess(true);
+                readerResult.setResult(ming.substring(0, ming.length() - 4));
+                return readerResult;
+            }
+        }
+
+        return readerResult;
     }
 
     @Override
@@ -76,19 +126,13 @@ public class ChuTianReader3 implements IReader {
         return null;
     }
 
-    private String getCmd2(String cmds) {
-        LogUtils.e("密文写卡");
-        String[] split = cmds.split(":");
-        String cmds2 = "";
-        for (String s : split) {
-            LogUtils.e("获得的加密数据::" + s);
-            byte[] bytes = Base64.decode(s.getBytes(), Base64.DEFAULT);
-            String jieMa = HexBytes.bytes2Hex(bytes, bytes.length);
-            String lv = HexBytes.desToHex(jieMa.length() / 2, 2);
-            LogUtils.e("揭秘数据::" + jieMa);
-            LogUtils.e("解密数据的长度16进制" + lv);
-            cmds2 += (lv + jieMa);
+    private String replaceBlank(String str) {
+        String dest = "";
+        if (str != null) {
+            Pattern p = Pattern.compile("\\s*|\t|\r|\n");
+            Matcher m = p.matcher(str);
+            dest = m.replaceAll("");
         }
-        return cmds2;
+        return dest;
     }
 }
